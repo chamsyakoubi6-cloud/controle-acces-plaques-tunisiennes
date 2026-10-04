@@ -1,0 +1,10 @@
+partie,image,rotation,remarque
+train,142.jpg,horaire,image couchée ; sens vérifié à l'oeil (docs/figures/phase2/inspection/couchees_1.jpg)
+train,263.jpg,horaire,image couchée ; sens vérifié à l'oeil (couchees_1.jpg)
+train,264.jpg,horaire,image couchée ; sens vérifié à l'oeil (couchees_2.jpg)
+train,265.jpg,horaire,image couchée ; sens vérifié à l'oeil (couchees_2.jpg)
+train,299.jpg,horaire,image couchée ; sens vérifié à l'oeil (couchees_2.jpg)
+train,569.jpg,horaire,image couchée ; sens vérifié à l'oeil (couchees_1.jpg)
+train,570.jpg,horaire,image couchée ; sens vérifié à l'oeil (couchees_1.jpg)
+train,577.jpg,horaire,image couchée ; sens vérifié à l'oeil (couchees_1.jpg)
+train,578.jpg,horaire,image couchée ; doublon exact de 577.jpg (retiré au dédoublonnage)

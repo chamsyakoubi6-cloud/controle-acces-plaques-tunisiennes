@@ -1,0 +1,8 @@
+# Fins de ligne : LF partout, dans le dépôt ET dans les copies de travail.
+# Raison : le code est aussi exécuté sur la Jetson (Linux). Un script shell
+# enregistré avec des fins de ligne Windows (\r\n) y échoue ("bad interpreter").
+* text=auto eol=lf
+
+# Exception : les fichiers batch Windows exigent CRLF pour cmd.exe.
+*.bat text eol=crlf
+*.cmd text eol=crlf

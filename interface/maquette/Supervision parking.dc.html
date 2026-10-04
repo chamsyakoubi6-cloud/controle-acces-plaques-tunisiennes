@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Branchement (phase 5) : React servi en local, les mêmes fichiers que sur unpkg (empreintes SRI vérifiées).
+     La page fonctionne ainsi sans internet, sur le PC comme sur la Jetson : support.js ne télécharge plus rien. -->
+<script src="./vendor/react.production.min.js"></script>
+<script src="./vendor/react-dom.production.min.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <title>Contrôle d'accès parking</title>
+  <style>
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#0a0e13}
+button{font:inherit;color:inherit}
+img{display:block}
+a{color:#55a5ff}
+a:hover{color:#8cc2ff}
+:focus-visible{outline:3px solid #55a5ff;outline-offset:2px}
+  </style>
+</helmet>
+<div id="app" ref="{{ refApp }}" style="--vw:1vw; --vh:1vh; --fond:#0a0e13; --surface:#121920; --surface-2:#19222c; --surface-3:#243040; --bord:#2d3a4a; --texte:#f2f5f8; --texte-2:#b5c1cd; --texte-3:#8d9aa8; --vert:#36d46e; --rouge:#f2493d; --orange:#f7a92b; --bleu:#55a5ff; --encre:#05090d; --signe:#1d55b4; --police:'Segoe UI', system-ui, -apple-system, Ubuntu, Cantarell, 'Noto Sans', 'DejaVu Sans', sans-serif; --police-titre:Bahnschrift, 'DIN Alternate', 'D-DIN', Ubuntu, 'Segoe UI', system-ui, sans-serif; --police-plaque:Bahnschrift, 'DIN Alternate', 'Arial Narrow', 'Ubuntu Condensed', 'DejaVu Sans Condensed', 'Liberation Sans Narrow', sans-serif; --police-arabe:'Segoe UI', Tahoma, 'Noto Sans Arabic', 'Noto Naskh Arabic', 'DejaVu Sans', Arial, sans-serif; --police-mono:Consolas, 'Cascadia Mono', 'Ubuntu Mono', 'DejaVu Sans Mono', monospace;">
+<div id="theme" data-theme="{{ themeNom }}" style="--fond:{{ th.fond }}; --surface:{{ th.surface }}; --surface-2:{{ th.surface2 }}; --surface-3:{{ th.surface3 }}; --bord:{{ th.bord }}; --texte:{{ th.texte }}; --texte-2:{{ th.texte2 }}; --texte-3:{{ th.texte3 }};">
+<div style="height:calc(100 * var(--vh)); min-height:620px; display:flex; flex-direction:column; background:var(--fond); color:var(--texte); font-family:var(--police); font-size:clamp(16px, calc(0.5 * var(--vw) + 10px), 21px); line-height:1.35; color-scheme:{{ th.schema }};">
+
+  <header style="flex:none; height:3.5em; display:flex; align-items:center; gap:1em; padding:0 1.5em; background:var(--surface); border-bottom:1px solid var(--bord);">
+    <div style="flex:none; display:flex; align-items:center; gap:0.6em; margin-right:0.5em;">
+      <div aria-hidden="true" style="width:1.75em; height:1.75em; border-radius:0.28em; background:var(--signe); box-shadow:inset 0 0 0 0.11em var(--signe), inset 0 0 0 0.19em #ffffff; color:#ffffff; display:flex; align-items:center; justify-content:center; font-family:var(--police-titre); font-weight:700; font-size:1.1em; line-height:1;">P</div>
+      <div style="display:{{ titreAff }}; font-family:var(--police-titre); font-weight:600; font-size:1.1em; white-space:nowrap;">Contrôle d'accès</div>
+    </div>
+    <nav role="tablist" aria-label="Vues" style="align-self:stretch; display:flex; gap:0.2em;">
+      <button id="onglet-supervision" role="tab" aria-controls="vue-supervision" aria-selected="{{ onglets.supervision.actif }}" onClick="{{ onglets.supervision.choisir }}" style="display:flex; align-items:center; padding:0 0.85em; border:0; border-top:3px solid transparent; border-bottom:3px solid {{ onglets.supervision.trait }}; background:transparent; color:{{ onglets.supervision.couleur }}; font-size:1em; font-weight:600; white-space:nowrap; cursor:pointer;" style-hover="background:var(--surface-2);">Supervision</button>
+      <button id="onglet-historique" role="tab" aria-controls="vue-historique" aria-selected="{{ onglets.historique.actif }}" onClick="{{ onglets.historique.choisir }}" style="display:flex; align-items:center; padding:0 0.85em; border:0; border-top:3px solid transparent; border-bottom:3px solid {{ onglets.historique.trait }}; background:transparent; color:{{ onglets.historique.couleur }}; font-size:1em; font-weight:600; white-space:nowrap; cursor:pointer;" style-hover="background:var(--surface-2);">Historique</button>
+      <button id="onglet-technique" role="tab" aria-controls="vue-technique" aria-selected="{{ onglets.technique.actif }}" onClick="{{ onglets.technique.choisir }}" style="display:flex; align-items:center; padding:0 0.85em; border:0; border-top:3px solid transparent; border-bottom:3px solid {{ onglets.technique.trait }}; background:transparent; color:{{ onglets.technique.couleur }}; font-size:1em; font-weight:600; white-space:nowrap; cursor:pointer;" style-hover="background:var(--surface-2);">Vue technique</button>
+    </nav>
+    <div style="flex:1; min-width:0;"></div>
+    <div id="bandeau-source" data-source="{{ source.cle }}" role="status" style="flex:none; display:flex; align-items:center; gap:0.5em; padding:0.35em 0.85em; border-radius:999px; border:1px solid var(--bord); background:var(--surface-2); font-size:0.92em; font-weight:600; white-space:nowrap;">
+      <span style="flex:none; width:0.62em; height:0.62em; border-radius:50%; background:{{ source.couleur }};"></span>
+      <span id="bandeau-source-texte">{{ source.libelle }}</span>
+    </div>
+    <button id="bouton-theme" aria-label="{{ ariaTheme }}" onClick="{{ basculerTheme }}" style="flex:none; display:flex; align-items:center; gap:0.5em; padding:0.42em 0.85em; border-radius:0.4em; border:1px solid var(--bord); background:transparent; color:var(--texte); font-size:0.95em; font-weight:600; white-space:nowrap; cursor:pointer;" style-hover="background:var(--surface-2);">
+      <span aria-hidden="true" style="flex:none; width:1em; height:1em; border-radius:50%; border:2px solid currentColor; background:linear-gradient(90deg, currentColor 50%, transparent 50%);"></span>
+      <span id="bouton-theme-texte">{{ libelleTheme }}</span>
+    </button>
+  </header>
+
+  <main style="flex:1; min-height:0; display:flex; flex-direction:column; padding:1.25em 1.5em;">
+
+    <section id="vue-supervision" role="tabpanel" aria-labelledby="onglet-supervision" style="display:{{ vues.supervision }}; flex:1; min-height:0; grid-template-columns:minmax(0, 1fr) clamp(340px, calc(36 * var(--vw)), 700px); gap:1.25em;">
+
+      <div style="min-width:0; min-height:0; display:flex; flex-direction:column; background:var(--surface); border:1px solid var(--bord); border-radius:0.5em; overflow:hidden;">
+        <div style="position:relative; flex:1; min-height:12em; background:#000000;">
+          <div id="flux-video-remplacement" style="position:absolute; inset:0; display:{{ video.affRemplacement }}; flex-direction:column; align-items:center; justify-content:center; gap:0.35em; padding:1.5em; text-align:center; background:var(--surface-2); border-bottom:1px dashed var(--bord);">
+            <div id="flux-video-message" style="font-size:1.2em; font-weight:700;">{{ video.message }}</div>
+            <div style="max-width:28em; color:var(--texte-2); text-wrap:pretty;">{{ video.detail }}</div>
+          </div>
+          <img id="flux-video" ref="{{ refVideo }}" data-image="video" data-src="{{ video.src }}" alt="" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; opacity:{{ video.opacite }}; transition:opacity .25s ease;">
+        </div>
+        <div id="bandeau-etat" style="flex:none; display:flex; flex-wrap:wrap; align-items:baseline; gap:0.3em 2.2em; padding:0.6em 1.1em 0.7em; border-top:1px solid var(--bord);">
+          <div style="display:flex; align-items:baseline; gap:0.55em;">
+            <span style="color:var(--texte-2);">Images par seconde</span>
+            <span id="bandeau-ips" style="font-family:var(--police-titre); font-weight:700; font-size:1.35em; font-variant-numeric:tabular-nums;">{{ bandeau.ips }}</span>
+          </div>
+          <div style="display:flex; align-items:baseline; gap:0.55em;">
+            <span style="color:var(--texte-2);">Matériel</span>
+            <span id="bandeau-materiel" style="font-family:var(--police-titre); font-weight:700; font-size:1.35em;">{{ bandeau.materiel }}</span>
+          </div>
+          <div style="display:flex; align-items:baseline; gap:0.55em;">
+            <span style="color:var(--texte-2);">Heure</span>
+            <span id="bandeau-heure" style="font-family:var(--police-titre); font-weight:700; font-size:1.35em; font-variant-numeric:tabular-nums;">{{ bandeau.heure }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="min-width:0; min-height:0; display:flex; flex-direction:column; gap:1.25em;">
+
+        <section id="lecture" data-statut="{{ lecture.statutCle }}" aria-label="Lecture en cours" style="flex:none; display:flex; flex-direction:column; gap:0.8em; padding:1em 1.25em 1.1em; background:var(--surface); border:1px solid var(--bord); border-radius:0.5em;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:1em;">
+            <h2 style="margin:0; font-size:0.85em; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--texte-2);">Lecture</h2>
+            <span id="lecture-statut" style="display:inline-flex; align-items:center; padding:0.22em 0.75em; border-radius:999px; border:1px solid {{ lecture.chipBord }}; background:{{ lecture.chipFond }}; color:{{ lecture.chipEncre }}; font-size:0.92em; font-weight:700; white-space:nowrap;">{{ lecture.statutLibelle }}</span>
+          </div>
+          <div id="lecture-plaque" dir="ltr" role="img" aria-label="{{ lecture.plaque.aria }}" style="align-self:center; width:100%; max-width:600px; aspect-ratio:520 / 110; padding:0.22em; border-radius:0.5em; background:#0b0b0b; box-shadow:0 0 0 1px var(--bord);">
+            <div style="height:100%; display:flex; align-items:center; justify-content:{{ lecture.plaque.justif }}; gap:3%; padding:0 6%; border:2px solid #e9e9e9; border-radius:0.32em; color:#ffffff; overflow:hidden;">
+              <span id="plaque-serie" style="font-family:var(--police-plaque); font-weight:700; font-size:clamp(38px, calc(4.86 * var(--vw) - 3.5px), 84px); line-height:1; letter-spacing:0.03em; font-variant-numeric:tabular-nums; white-space:nowrap;">{{ lecture.plaque.serie }}</span>
+              <span id="plaque-tunis" lang="ar" dir="rtl" style="display:{{ lecture.plaque.affTunis }}; font-family:var(--police-arabe); font-weight:700; font-size:clamp(28px, calc(3.6 * var(--vw) - 2.6px), 62px); line-height:1; white-space:nowrap;">تونس</span>
+              <span id="plaque-numero" style="display:{{ lecture.plaque.affNumero }}; font-family:var(--police-plaque); font-weight:700; font-size:clamp(38px, calc(4.86 * var(--vw) - 3.5px), 84px); line-height:1; letter-spacing:0.03em; font-variant-numeric:tabular-nums; white-space:nowrap;">{{ lecture.plaque.numero }}</span>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:1.5em;">
+            <div>
+              <div style="display:flex; align-items:baseline; justify-content:space-between; gap:0.5em;">
+                <span style="color:var(--texte-2);">Confiance</span>
+                <span id="lecture-confiance" style="font-family:var(--police-titre); font-weight:700; font-size:1.45em; font-variant-numeric:tabular-nums; white-space:nowrap;">{{ lecture.confiance }}</span>
+              </div>
+              <div style="margin-top:0.35em; height:0.55em; border-radius:0.2em; background:var(--surface-3); overflow:hidden;">
+                <div id="lecture-confiance-barre" style="height:100%; width:{{ lecture.confianceLargeur }}; background:{{ lecture.couleur }}; transition:width .3s ease;"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex; align-items:baseline; justify-content:space-between; gap:0.5em;">
+                <span style="color:var(--texte-2);">Vote</span>
+                <span id="lecture-vote" style="font-family:var(--police-titre); font-weight:700; font-size:1.45em; font-variant-numeric:tabular-nums; white-space:nowrap;">{{ lecture.vote }}</span>
+              </div>
+              <div id="lecture-vote-barre" style="margin-top:0.35em; height:0.55em; display:flex; gap:0.25em;">
+                <sc-for list="{{ lecture.pips }}" as="pip" hint-placeholder-count="5">
+                  <span style="flex:1; border-radius:0.2em; background:{{ pip.fond }}; transition:background-color .2s ease;"></span>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="decision" data-decision="{{ hero.mode }}" role="status" aria-live="polite" style="flex:1 1 auto; min-height:0; display:flex; flex-direction:column; gap:0.45em; padding:1.05em 1.25em 1.25em; border-radius:0.5em; border:1px solid {{ hero.bord }}; background:{{ hero.fond }}; color:{{ hero.encre }}; overflow:hidden; transition:background-color .3s ease, color .3s ease, border-color .3s ease;">
+          <h2 style="margin:0; font-size:0.85em; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:{{ hero.titre }};">Décision</h2>
+          <div id="decision-texte" style="font-family:var(--police-titre); font-weight:700; font-size:clamp(30px, calc(2.6 * var(--vw) + 4px), 60px); line-height:1.05; text-wrap:balance;">{{ hero.libelle }}</div>
+          <div id="decision-details" style="display:{{ hero.affDetails }}; margin-top:auto; padding-top:0.6em; flex-wrap:wrap; align-items:center; gap:0.6em 1.4em;">
+            <div dir="ltr" role="img" aria-label="{{ hero.plaque.aria }}" style="flex:none; width:12.3em; height:2.6em; padding:0.13em; border-radius:0.3em; background:#0b0b0b;">
+              <div style="height:100%; display:flex; align-items:center; justify-content:{{ hero.plaque.justif }}; gap:3%; padding:0 6%; border:1.5px solid #e9e9e9; border-radius:0.2em; color:#ffffff; overflow:hidden;">
+                <span id="decision-plaque-serie" style="font-family:var(--police-plaque); font-weight:700; font-size:1.5em; line-height:1; letter-spacing:0.03em; font-variant-numeric:tabular-nums; white-space:nowrap;">{{ hero.plaque.serie }}</span>
+                <span id="decision-plaque-tunis" lang="ar" dir="rtl" style="display:{{ hero.plaque.affTunis }}; font-family:var(--police-arabe); font-weight:700; font-size:1.12em; line-height:1; white-space:nowrap;">تونس</span>
+                <span id="decision-plaque-numero" style="display:{{ hero.plaque.affNumero }}; font-family:var(--police-plaque); font-weight:700; font-size:1.5em; line-height:1; letter-spacing:0.03em; font-variant-numeric:tabular-nums; white-space:nowrap;">{{ hero.plaque.numero }}</span>
+              </div>
+            </div>
+            <span id="decision-heure" style="font-family:var(--police-titre); font-weight:700; font-size:1.5em; font-variant-numeric:tabular-nums;">{{ hero.heure }}</span>
+            <span id="decision-delai" style="font-size:1.2em; font-weight:600; white-space:nowrap;">{{ hero.delai }}</span>
+          </div>
+          <div id="decision-resume" style="display:{{ hero.affResume }}; margin-top:auto; padding-top:0.6em; color:{{ hero.titre }}; text-wrap:pretty;">{{ hero.resume }}</div>
+        </section>
+
+        <section id="barriere" data-etat="{{ barriere.cle }}" aria-label="Barrière" style="flex:none; display:flex; align-items:center; gap:1.5em; padding:0.9em 1.25em; background:var(--surface); border:1px solid var(--bord); border-radius:0.5em;">
+          <div aria-hidden="true" style="position:relative; flex:none; width:6.2em; height:7.2em;">
+            <div style="position:absolute; left:0; right:0; bottom:0; height:2px; background:var(--bord);"></div>
+            <div id="barriere-bras" style="position:absolute; left:0.7em; bottom:2.05em; width:5.2em; height:0.6em; border-radius:0.3em; background:repeating-linear-gradient(90deg, #e5322d 0 0.8em, #f4f4f4 0.8em 1.6em); box-shadow:0 0 0 1px rgba(0, 0, 0, 0.35); transform-origin:0.3em 50%; transform:rotate({{ barriere.angle }}deg); transition:transform 1.1s cubic-bezier(.65, 0, .35, 1);"></div>
+            <div style="position:absolute; left:0.35em; bottom:0; width:1.3em; height:2.9em; border-radius:0.25em 0.25em 0 0; background:var(--surface-3); border:1px solid var(--bord);"></div>
+            <div id="barriere-voyant" style="position:absolute; left:0.7em; bottom:3.15em; width:0.6em; height:0.6em; border-radius:50%; background:{{ barriere.voyant }}; box-shadow:0 0 0.55em {{ barriere.voyant }}; transition:background-color .3s ease;"></div>
+          </div>
+          <div style="min-width:0; display:flex; flex-direction:column; gap:0.15em;">
+            <h2 style="margin:0; font-size:0.85em; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--texte-2);">Barrière</h2>
+            <div id="barriere-etat" style="font-family:var(--police-titre); font-weight:700; font-size:2em; line-height:1.1;">{{ barriere.libelle }}</div>
+            <div id="barriere-depuis" style="font-size:1.1em; color:var(--texte-2); font-variant-numeric:tabular-nums;">{{ barriere.depuis }}</div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="vue-historique" role="tabpanel" aria-labelledby="onglet-historique" style="display:{{ vues.historique }}; flex:1; min-height:0; flex-direction:column; gap:0.6em;">
+      <h2 style="margin:0; font-size:0.85em; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--texte-2);">Filtrer par décision</h2>
+      <div id="filtre-decision" role="group" aria-label="Filtrer par décision" style="flex:none; display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:1em; margin-bottom:0.65em;">
+        <button id="filtre-tous" aria-pressed="{{ filtres.tous.actif }}" onClick="{{ filtres.tous.choisir }}" style="display:flex; flex-direction:column; align-items:flex-start; gap:0.25em; padding:0.75em 1.1em 0.85em; border-radius:0.5em; border:2px solid {{ filtres.tous.bord }}; background:{{ filtres.tous.fond }}; color:var(--texte); text-align:left; cursor:pointer;" style-hover="background:var(--surface-2);">
+          <span style="display:flex; align-items:center; gap:0.5em; font-weight:600; color:var(--texte-2);"><span style="width:0.7em; height:0.7em; border-radius:50%; background:var(--texte-3);"></span>Passages</span>
+          <span id="compteur-passages" style="font-family:var(--police-titre); font-weight:700; font-size:2.3em; line-height:1; font-variant-numeric:tabular-nums;">{{ compteurs.passages }}</span>
+        </button>
+        <button id="filtre-ouverture" aria-pressed="{{ filtres.ouverture.actif }}" onClick="{{ filtres.ouverture.choisir }}" style="display:flex; flex-direction:column; align-items:flex-start; gap:0.25em; padding:0.75em 1.1em 0.85em; border-radius:0.5em; border:2px solid {{ filtres.ouverture.bord }}; background:{{ filtres.ouverture.fond }}; color:var(--texte); text-align:left; cursor:pointer;" style-hover="background:var(--surface-2);">
+          <span style="display:flex; align-items:center; gap:0.5em; font-weight:600; color:var(--texte-2);"><span style="width:0.7em; height:0.7em; border-radius:50%; background:var(--vert);"></span>Ouvertures</span>
+          <span id="compteur-ouvertures" style="font-family:var(--police-titre); font-weight:700; font-size:2.3em; line-height:1; font-variant-numeric:tabular-nums;">{{ compteurs.ouvertures }}</span>
+        </button>
+        <button id="filtre-refus" aria-pressed="{{ filtres.refus.actif }}" onClick="{{ filtres.refus.choisir }}" style="display:flex; flex-direction:column; align-items:flex-start; gap:0.25em; padding:0.75em 1.1em 0.85em; border-radius:0.5em; border:2px solid {{ filtres.refus.bord }}; background:{{ filtres.refus.fond }}; color:var(--texte); text-align:left; cursor:pointer;" style-hover="background:var(--surface-2);">
+          <span style="display:flex; align-items:center; gap:0.5em; font-weight:600; color:var(--texte-2);"><span style="width:0.7em; height:0.7em; border-radius:50%; background:var(--rouge);"></span>Refus</span>
+          <span id="compteur-refus" style="font-family:var(--police-titre); font-weight:700; font-size:2.3em; line-height:1; font-variant-numeric:tabular-nums;">{{ compteurs.refus }}</span>
+        </button>
+        <button id="filtre-non-lu" aria-pressed="{{ filtres.nonLu.actif }}" onClick="{{ filtres.nonLu.choisir }}" style="display:flex; flex-direction:column; align-items:flex-start; gap:0.25em; padding:0.75em 1.1em 0.85em; border-radius:0.5em; border:2px solid {{ filtres.nonLu.bord }}; background:{{ filtres.nonLu.fond }}; color:var(--texte); text-align:left; cursor:pointer;" style-hover="background:var(--surface-2);">
+          <span style="display:flex; align-items:center; gap:0.5em; font-weight:600; color:var(--texte-2);"><span style="width:0.7em; height:0.7em; border-radius:50%; background:var(--orange);"></span>Non lus</span>
+          <span id="compteur-non-lus" style="font-family:var(--police-titre); font-weight:700; font-size:2.3em; line-height:1; font-variant-numeric:tabular-nums;">{{ compteurs.nonLus }}</span>
+        </button>
+      </div>
+
+      <div style="flex:1; min-height:0; display:flex; flex-direction:column; background:var(--surface); border:1px solid var(--bord); border-radius:0.5em; overflow:hidden; --colonnes:minmax(5.5em, 0.8fr) minmax(10.5em, 1.3fr) minmax(8em, 1fr) minmax(5em, 0.7fr) minmax(4em, 0.55fr) minmax(5em, 0.7fr) minmax(7em, 0.9fr);">
+        <div id="journal-tableau" role="table" aria-label="Historique des passages" style="flex:1; min-height:0; overflow:auto;">
+          <div role="row" style="position:sticky; top:0; z-index:1; display:grid; grid-template-columns:var(--colonnes); gap:0 1em; padding:0.75em 1.25em; background:var(--surface); border-bottom:1px solid var(--bord); color:var(--texte-2); font-size:0.85em; font-weight:700; letter-spacing:0.06em; text-transform:uppercase;">
+            <span role="columnheader">Heure</span>
+            <span role="columnheader">Plaque</span>
+            <span role="columnheader">Décision</span>
+            <span role="columnheader">Autorisé</span>
+            <span role="columnheader">Voix</span>
+            <span role="columnheader">Délai</span>
+            <span role="columnheader">Capture</span>
+          </div>
+          <div id="journal-corps" role="rowgroup">
+            <sc-for list="{{ journal.lignes }}" as="l" hint-placeholder-count="8">
+              <div role="row" data-decision="{{ l.cle }}" style="display:grid; grid-template-columns:var(--colonnes); gap:0 1em; align-items:center; padding:0.5em 1.25em; border-bottom:1px solid var(--bord);" style-hover="background:var(--surface-2);">
+                <span role="cell" style="font-family:var(--police-titre); font-weight:700; font-size:1.1em; font-variant-numeric:tabular-nums;">{{ l.heure }}</span>
+                <span role="cell" style="display:block;">
+                  <span dir="ltr" role="img" aria-label="{{ l.plaque.aria }}" style="display:block; width:9.9em; height:2.1em; padding:0.11em; border-radius:0.26em; background:#0b0b0b; box-shadow:0 0 0 1px var(--bord);">
+                    <span style="height:100%; display:flex; align-items:center; justify-content:{{ l.plaque.justif }}; gap:3%; padding:0 6%; border:1.5px solid #e9e9e9; border-radius:0.18em; color:#ffffff; overflow:hidden;">
+                      <span style="font-family:var(--police-plaque); font-weight:700; font-size:1.2em; line-height:1; letter-spacing:0.03em; font-variant-numeric:tabular-nums; white-space:nowrap;">{{ l.plaque.serie }}</span>
+                      <span lang="ar" dir="rtl" style="display:{{ l.plaque.affTunis }}; font-family:var(--police-arabe); font-weight:700; font-size:0.9em; line-height:1; white-space:nowrap;">تونس</span>
+                      <span style="display:{{ l.plaque.affNumero }}; font-family:var(--police-plaque); font-weight:700; font-size:1.2em; line-height:1; letter-spacing:0.03em; font-variant-numeric:tabular-nums; white-space:nowrap;">{{ l.plaque.numero }}</span>
+                    </span>
+                  </span>
+                </span>
+                <span role="cell"><span style="display:inline-flex; align-items:center; padding:0.2em 0.75em; border-radius:999px; background:{{ l.fond }}; color:{{ l.encre }}; font-size:0.95em; font-weight:700; white-space:nowrap;">{{ l.libelle }}</span></span>
+                <span role="cell" style="font-weight:600;">{{ l.autorise }}</span>
+                <span role="cell" style="font-variant-numeric:tabular-nums;">{{ l.voix }}</span>
+                <span role="cell" style="font-variant-numeric:tabular-nums; white-space:nowrap;">{{ l.delai }}</span>
+                <span role="cell" style="display:block; position:relative; width:6.4em; aspect-ratio:16 / 9; border-radius:0.25em; overflow:hidden;">
+                  <span style="position:absolute; inset:0; border:1px dashed var(--bord); border-radius:0.25em; background:var(--surface-2);"></span>
+                  <img data-image="capture" data-src="{{ l.capture }}" alt="" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:{{ l.affImage }};">
+                </span>
+              </div>
+            </sc-for>
+          </div>
+          <div id="journal-vide" style="display:{{ journal.affVide }}; padding:3em 1.25em; text-align:center; font-size:1.1em; color:var(--texte-2);">{{ journal.messageVide }}</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="vue-technique" role="tabpanel" aria-labelledby="onglet-technique" style="display:{{ vues.technique }}; flex:1; min-height:0; flex-direction:column; gap:1.25em;">
+      <div id="etapes" style="flex:1; min-height:0; display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); grid-auto-rows:minmax(0, 1fr); gap:1.25em;">
+        <sc-for list="{{ tech.etapes }}" as="e" hint-placeholder-count="6">
+          <figure id="{{ e.idCarte }}" style="margin:0; min-width:0; min-height:0; display:flex; flex-direction:column; gap:0.55em; padding:0.85em 1em 1em; background:var(--surface); border:1px solid var(--bord); border-radius:0.5em;">
+            <figcaption style="display:flex; align-items:baseline; gap:0.6em;">
+              <span style="font-family:var(--police-titre); font-weight:700; font-size:1.25em; line-height:1; color:var(--texte-3); font-variant-numeric:tabular-nums;">{{ e.numero }}</span>
+              <span style="font-size:1.1em; font-weight:700;">{{ e.titre }}</span>
+            </figcaption>
+            <div style="position:relative; flex:1; min-height:4.5em; border-radius:0.3em; overflow:hidden; background:var(--surface-3);">
+              <div style="position:absolute; inset:0; display:{{ e.affRemplacement }}; flex-direction:column; align-items:center; justify-content:center; gap:0.2em; padding:0.5em; border:1px dashed var(--bord); border-radius:0.3em; background:var(--surface-2); color:var(--texte-2); text-align:center;">
+                <span style="font-weight:600;">Image indisponible</span>
+                <span style="font-family:var(--police-mono); font-size:0.85em; color:var(--texte-3);">{{ e.detail }}</span>
+              </div>
+              <img id="{{ e.id }}" data-image="etape" data-cle="{{ e.nom }}" data-src="{{ e.src }}" alt="" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; image-rendering:{{ e.rendu }}; display:{{ e.affImage }};">
+            </div>
+          </figure>
+        </sc-for>
+      </div>
+      <section id="latences" aria-label="Temps de traitement" style="flex:none; padding:0.95em 1.25em 1.1em; background:var(--surface); border:1px solid var(--bord); border-radius:0.5em;">
+        <div style="display:flex; align-items:baseline; justify-content:space-between; gap:1em; margin-bottom:0.6em;">
+          <h2 style="margin:0; font-size:0.85em; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--texte-2); white-space:nowrap;">Temps de traitement par étape</h2>
+          <div style="display:flex; align-items:baseline; gap:0.55em;">
+            <span style="color:var(--texte-2);">Total</span>
+            <span id="latence-total" style="font-family:var(--police-titre); font-weight:700; font-size:1.6em; font-variant-numeric:tabular-nums; white-space:nowrap;">{{ tech.total }}</span>
+          </div>
+        </div>
+        <div id="latences-liste" style="display:flex; flex-direction:column; gap:0.4em;">
+          <sc-for list="{{ tech.latences }}" as="l" hint-placeholder-count="5">
+            <div id="{{ l.id }}" style="display:grid; grid-template-columns:9.5em minmax(0, 1fr) 6em; align-items:center; gap:1em;">
+              <span style="font-weight:600;">{{ l.libelle }}</span>
+              <div style="height:0.75em; border-radius:0.2em; background:var(--surface-3); overflow:hidden;">
+                <div style="height:100%; width:{{ l.largeur }}; min-width:2px; background:var(--texte-2); transition:width .4s ease;"></div>
+              </div>
+              <span id="{{ l.idValeur }}" style="text-align:right; font-family:var(--police-titre); font-weight:700; font-size:1.15em; font-variant-numeric:tabular-nums; white-space:nowrap;">{{ l.valeur }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </section>
+
+  </main>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;themeInitial&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;sombre&quot;, &quot;clair&quot;], &quot;default&quot;: &quot;sombre&quot;, &quot;tsType&quot;: &quot;'sombre' | 'clair'&quot;, &quot;section&quot;: &quot;Affichage&quot;}, &quot;dureeDecisionS&quot;: {&quot;editor&quot;: &quot;range&quot;, &quot;min&quot;: 3, &quot;max&quot;: 20, &quot;step&quot;: 1, &quot;unit&quot;: &quot;s&quot;, &quot;default&quot;: 6, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Affichage&quot;}, &quot;vitesseDemo&quot;: {&quot;editor&quot;: &quot;range&quot;, &quot;min&quot;: 0.5, &quot;max&quot;: 3, &quot;step&quot;: 0.25, &quot;unit&quot;: &quot;×&quot;, &quot;default&quot;: 1, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Mode démonstration&quot;}}">
+// Intégration
+// - Fonctions globales : mettreAJour(etat) (réponse de /etat) et afficherJournal(passages) (réponse de /journal).
+//   Événement « parking:pret » émis sur window quand elles sont disponibles ; window.parking regroupe tout.
+// - Adresses : window.PARKING_CONFIG = { urlEtat: …, urlJournal: …, urlVideo: …, urlEtape: … } défini avant le chargement.
+// - Le mode démonstration démarre quand /etat ne répond plus et s'arrête au premier appel de mettreAJour.
+// - Identifiants stables : bandeau-source, bandeau-ips, bandeau-materiel, bandeau-heure, bouton-theme, onglet-*, vue-*,
+//   flux-video, flux-video-remplacement, lecture, lecture-statut, lecture-plaque, plaque-serie, plaque-tunis, plaque-numero,
+//   lecture-confiance, lecture-confiance-barre, lecture-vote, lecture-vote-barre, decision, decision-texte, decision-details,
+//   decision-plaque-serie/tunis/numero, decision-heure, decision-delai, decision-resume, barriere, barriere-bras,
+//   barriere-voyant, barriere-etat, barriere-depuis, filtre-tous/ouverture/refus/non-lu, compteur-passages/ouvertures/refus/non-lus,
+//   journal-tableau, journal-corps, journal-vide, etape-<nom>, latences-liste, latence-<clé>, latence-<clé>-valeur, latence-total.
+
+const CONFIG = {
+  urlEtat: '/etat',
+  urlJournal: '/journal?n=50',
+  urlVideo: '/video',
+  urlEtape: '/etape/',
+  periodeEtatMs: 300,
+  periodeJournalMs: 2000,
+  periodeEtapesMs: 1000,
+  delaiRequeteMs: 1500,
+  delaiAvantDemoMs: 1500,
+};
+const CLE_THEME = 'parking.theme';
+const ONGLETS = ['supervision', 'historique', 'technique'];
+const NBSP = '\u00a0';
+const ETAPES = [
+  ['decoupe', 'Découpe'], ['coins', 'Coins'], ['redressee', 'Plaque redressée'],
+  ['binaire', 'Binarisée'], ['segmentation', 'Segmentée'], ['vignettes', 'Vignettes 32×32'],
+];
+const LIBELLES_LATENCE = { detection: 'Détection', redressement: 'Redressement', binarisation: 'Binarisation', segmentation: 'Segmentation', lecture: 'Lecture' };
+const DECISIONS = {
+  ouverture: { libelle: 'Autorisé, barrière ouverte', court: 'Ouverture', couleur: 'var(--vert)' },
+  refus: { libelle: 'Refusé', court: 'Refus', couleur: 'var(--rouge)' },
+  'non lu': { libelle: 'Lecture incertaine', court: 'Non lu', couleur: 'var(--orange)' },
+};
+const SOURCES = {
+  connexion: { libelle: 'Connexion au système…', couleur: 'var(--texte-3)' },
+  systeme: { libelle: 'Système connecté', couleur: 'var(--vert)' },
+  demo: { libelle: 'Mode démonstration', couleur: 'var(--orange)' },
+};
+const THEME_CLAIR = { fond: '#e9edf1', surface: '#ffffff', surface2: '#eef2f6', surface3: '#d8dfe7', bord: '#b3becb', texte: '#0a1016', texte2: '#33404d', texte3: '#55616e', schema: 'light' };
+const THEME_SOMBRE = { fond: '', surface: '', surface2: '', surface3: '', bord: '', texte: '', texte2: '', texte3: '', schema: 'dark' };
+
+const AUTORISEES_DEMO = ['215 TU 4567', '244 TU 3310', '203 TU 765', '227 TU 1598', '239 TU 6024'];
+const INCONNUES_DEMO = ['198 TU 1203', '176 TU 902', '188 TU 4410', '162 TU 3077'];
+const SCENARIO_DEMO = [
+  { numero: '215 TU 4567', decision: 'ouverture', autorise: true },
+  { numero: '198 TU 1203', decision: 'refus', autorise: false },
+  { numero: '', decision: 'non lu', autorise: false, candidats: ['231 TU 8812', '231 TU 8612', '281 TU 8812'] },
+  { numero: '244 TU 3310', decision: 'ouverture', autorise: true },
+  { numero: '176 TU 902', decision: 'refus', autorise: false },
+];
+
+const fmt1 = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const estNombre = (v) => typeof v === 'number' && isFinite(v);
+const un = (v) => (estNombre(v) ? fmt1.format(v) : '—');
+const arrondi = (v) => Math.round(v * 10) / 10;
+const deux = (n) => String(n).padStart(2, '0');
+const hhmmss = (d) => deux(d.getHours()) + ':' + deux(d.getMinutes()) + ':' + deux(d.getSeconds());
+const horodater = (url) => url + (url.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
+const sansAccents = (s) => String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+const humaniser = (s) => {
+  const t = String(s == null ? '' : s).replace(/_/g, ' ').trim();
+  return t ? t.charAt(0).toUpperCase() + t.slice(1) : '—';
+};
+
+function duree(s) {
+  if (!estNombre(s)) return '—';
+  if (s < 60) return fmt1.format(s) + NBSP + 's';
+  const m = Math.floor(s / 60);
+  if (m < 60) return m + NBSP + 'min' + NBSP + deux(Math.floor(s % 60)) + NBSP + 's';
+  return Math.floor(m / 60) + NBSP + 'h' + NBSP + deux(m % 60) + NBSP + 'min';
+}
+function versSecondes(h) {
+  const m = /^(\d{1,2}):(\d{2})(?::(\d{2}))?/.exec(String(h == null ? '' : h).trim());
+  return m ? +m[1] * 3600 + +m[2] * 60 + +(m[3] || 0) : NaN;
+}
+function ecartHeures(a, b) {
+  let d = versSecondes(a) - versSecondes(b);
+  if (d < -43200) d += 86400;
+  else if (d > 43200) d -= 86400;
+  return d;
+}
+function cleDecision(d) {
+  const k = sansAccents(d).replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+  return k === 'nonlu' ? 'non lu' : k;
+}
+// Découpe autour de « TU » : série à gauche, تونس au milieu, numéro à droite (trois éléments séparés).
+function decouperPlaque(texte) {
+  const t = texte == null ? '' : String(texte).trim();
+  if (!t || t === '—') return { serie: '—', numero: '', affTunis: 'none', affNumero: 'none', justif: 'center', aria: 'Aucune lecture' };
+  const m = /^(.*?)\s*TU\s*(.*)$/i.exec(t);
+  if (m) return { serie: m[1].trim(), numero: m[2].trim(), affTunis: 'inline', affNumero: 'inline', justif: 'space-between', aria: 'Plaque ' + t };
+  return { serie: t, numero: '', affTunis: 'none', affNumero: 'none', justif: 'center', aria: 'Plaque ' + t };
+}
+function lireJSON(url, delaiMs) {
+  const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+  const minuterie = setTimeout(() => { if (ctrl) ctrl.abort(); }, delaiMs);
+  return fetch(url, { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined })
+    .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then((v) => { clearTimeout(minuterie); return v; }, (e) => { clearTimeout(minuterie); throw e; });
+}
+function mesuresDemo() {
+  const j = (base, amp) => arrondi(base + (Math.random() * 2 - 1) * amp);
+  return {
+    ips: j(16.1, 0.6),
+    latences: { detection: j(41.2, 2.5), redressement: j(1.8, 0.2), binarisation: j(2.4, 0.25), segmentation: j(1.6, 0.2), lecture: j(0.4, 0.08) },
+  };
+}
+function historiqueDemo(maintenant) {
+  let graine = 20260;
+  const alea = () => (graine = (graine * 16807) % 2147483647) / 2147483647;
+  const liste = [];
+  let t = maintenant - 95000;
+  for (let i = 0; i < 16; i++) {
+    const r = alea();
+    const decision = r < 0.6 ? 'ouverture' : r < 0.85 ? 'refus' : 'non lu';
+    const pool = decision === 'ouverture' ? AUTORISEES_DEMO : INCONNUES_DEMO;
+    liste.push({
+      heure: hhmmss(new Date(t)),
+      numero: decision === 'non lu' ? '' : pool[Math.floor(alea() * pool.length)],
+      decision,
+      autorise: decision === 'ouverture',
+      voix: decision === 'non lu' ? 2 : 5,
+      delai_s: arrondi(decision === 'non lu' ? 3.1 + alea() * 0.5 : 0.9 + alea() * 0.8),
+      capture: '',
+    });
+    t -= 45000 + alea() * 150000;
+  }
+  return liste;
+}
+
+class Component extends DCLogic {
+  state = {
+    onglet: 'supervision', theme: null, filtre: 'tous', source: 'connexion', etat: null, passages: [],
+    videoSrc: null, videoEtat: 'essai', tEtapes: 0, etapesOk: {}, capturesKo: {}, largeur: 0,
+  };
+  refVideo = React.createRef();
+  refApp = React.createRef();
+
+  componentDidMount() {
+    this.cfg = Object.assign({}, CONFIG, window.PARKING_CONFIG || {});
+    this.debut = Date.now();
+    this.derniereReponse = 0;
+    let theme = null;
+    try { theme = localStorage.getItem(CLE_THEME); } catch (e) {}
+    const hash = (location.hash || '').slice(1);
+    this.setState({
+      onglet: ONGLETS.indexOf(hash) >= 0 ? hash : 'supervision',
+      theme: theme === 'clair' || theme === 'sombre' ? theme : null,
+      videoSrc: this.cfg.urlVideo,
+      videoEtat: 'essai',
+      tEtapes: Date.now(),
+    });
+    window.mettreAJour = this.mettreAJour;
+    window.afficherJournal = this.afficherJournal;
+    window.parking = { config: this.cfg, mettreAJour: this.mettreAJour, afficherJournal: this.afficherJournal, rafraichirEtapes: this.rafraichirEtapes };
+    this.minuteries = [
+      setInterval(this.interrogerEtat, this.cfg.periodeEtatMs),
+      setInterval(this.interrogerJournal, this.cfg.periodeJournalMs),
+      setInterval(this.rafraichirEtapes, this.cfg.periodeEtapesMs),
+      setInterval(this.reessayerVideo, 5000),
+    ];
+    if (typeof ResizeObserver === 'function' && this.refApp.current) {
+      this.observateur = new ResizeObserver((entrees) => {
+        const l = Math.round(entrees[0].contentRect.width);
+        if (l !== this.state.largeur) this.setState({ largeur: l });
+      });
+      this.observateur.observe(this.refApp.current);
+    }
+    this.synchroniserImages();
+    this.interrogerEtat();
+    try { window.dispatchEvent(new CustomEvent('parking:pret')); } catch (e) {}
+  }
+
+  componentDidUpdate() { this.synchroniserImages(); }
+
+  // Les <img> reçoivent leur adresse par data-src : src et écouteurs load/error sont posés ici.
+  synchroniserImages() {
+    const racine = this.refApp.current;
+    if (!racine) return;
+    const imgs = racine.querySelectorAll('img[data-image]');
+    for (let i = 0; i < imgs.length; i++) {
+      const img = imgs[i];
+      if (!img.__parking) {
+        img.__parking = true;
+        img.addEventListener('load', this.surImage);
+        img.addEventListener('error', this.surImage);
+      }
+      const voulu = img.getAttribute('data-src');
+      if (voulu) { if (img.getAttribute('src') !== voulu) img.setAttribute('src', voulu); }
+      else if (img.hasAttribute('src')) img.removeAttribute('src');
+    }
+  }
+
+  surImage = (ev) => {
+    const img = ev.currentTarget;
+    const ok = ev.type === 'load';
+    const type = img.getAttribute('data-image');
+    if (type === 'video') { if (ok) this.surChargementVideo(); else this.surErreurVideo(); }
+    else if (type === 'etape') this.marquerEtape(img.getAttribute('data-cle'), ok);
+    else if (type === 'capture' && !ok) this.marquerCaptureKo(img.getAttribute('data-src'));
+  };
+
+  componentWillUnmount() {
+    (this.minuteries || []).forEach(clearInterval);
+    if (this.observateur) this.observateur.disconnect();
+    clearInterval(this.minuterieDemo);
+    this.demo = null;
+  }
+
+  dureeDecision() { const v = Number(this.props.dureeDecisionS); return isFinite(v) && v > 0 ? v : 6; }
+  vitesse() { const v = Number(this.props.vitesseDemo); return isFinite(v) && v > 0 ? v : 1; }
+
+  // Met à jour toute la page à partir d'une réponse de /etat.
+  mettreAJour = (etat) => {
+    const avant = this.state.source;
+    this.derniereReponse = Date.now();
+    if (this.demo) this.arreterDemo();
+    this.appliquerEtat(etat, 'systeme');
+    if (avant !== 'systeme') {
+      if (avant === 'demo' || this.state.videoEtat === 'erreur') this.relancerVideo();
+      this.interrogerJournal(true);
+    }
+  };
+
+  // Remplit l'historique à partir d'une réponse de /journal (liste de passages).
+  afficherJournal = (passages) => {
+    let liste = Array.isArray(passages) ? passages.filter((p) => p && typeof p === 'object') : [];
+    if (liste.length > 1 && versSecondes(liste[0].heure) < versSecondes(liste[liste.length - 1].heure)) liste = liste.slice().reverse();
+    this.setState({ passages: liste });
+  };
+
+  appliquerEtat(etat, source) {
+    const e = etat && typeof etat === 'object' ? etat : {};
+    const d = e.derniere_decision;
+    const cle = d ? [d.heure, d.numero, d.decision].join('|') : '';
+    if (cle !== this.cleDecisionVue) { this.cleDecisionVue = cle; this.vueDecision = Date.now(); }
+    this.setState({ etat: e, source });
+  }
+
+  interrogerEtat = () => {
+    this.verifierVideo();
+    if (this.requeteEtat || !this.cfg) return;
+    this.requeteEtat = true;
+    lireJSON(this.cfg.urlEtat, this.cfg.delaiRequeteMs)
+      .then((etat) => {
+        if (!etat || typeof etat !== 'object' || Array.isArray(etat)) throw new Error('Réponse /etat invalide');
+        this.mettreAJour(etat);
+      })
+      .catch(() => {
+        if (Date.now() - (this.derniereReponse || this.debut) >= this.cfg.delaiAvantDemoMs) this.demarrerDemo();
+      })
+      .then(() => { this.requeteEtat = false; });
+  };
+
+  interrogerJournal = (force) => {
+    if ((force !== true && this.state.source !== 'systeme') || this.requeteJournal || !this.cfg) return;
+    this.requeteJournal = true;
+    lireJSON(this.cfg.urlJournal, 3000)
+      .then((r) => {
+        const liste = Array.isArray(r) ? r : r && Array.isArray(r.passages) ? r.passages : null;
+        if (liste && !this.demo) this.afficherJournal(liste);
+      })
+      .catch(() => {})
+      .then(() => { this.requeteJournal = false; });
+  };
+
+  rafraichirEtapes = () => {
+    if (this.state.onglet === 'technique' && this.state.source === 'systeme') this.setState({ tEtapes: Date.now() });
+  };
+
+  surErreurVideo = () => { if (this.state.videoEtat !== 'erreur') this.setState({ videoEtat: 'erreur' }); };
+  surChargementVideo = () => { if (this.state.videoEtat !== 'ok') this.setState({ videoEtat: 'ok' }); };
+  verifierVideo() {
+    const img = this.refVideo.current;
+    if (this.state.videoEtat === 'essai' && img && img.naturalWidth > 0) this.setState({ videoEtat: 'ok' });
+  }
+  relancerVideo() { if (this.cfg) this.setState({ videoEtat: 'essai', videoSrc: horodater(this.cfg.urlVideo) }); }
+  reessayerVideo = () => { if (this.state.source === 'systeme' && this.state.videoEtat === 'erreur') this.relancerVideo(); };
+
+  marquerEtape(nom, ok) {
+    if (this.state.etapesOk[nom] !== ok) this.setState((s) => ({ etapesOk: Object.assign({}, s.etapesOk, { [nom]: ok }) }));
+  }
+  marquerCaptureKo(url) {
+    if (url && !this.state.capturesKo[url]) this.setState((s) => ({ capturesKo: Object.assign({}, s.capturesKo, { [url]: true }) }));
+  }
+
+  choisirOnglet(cle) {
+    this.setState({ onglet: cle, tEtapes: cle === 'technique' ? Date.now() : this.state.tEtapes });
+    try { history.replaceState(null, '', '#' + cle); } catch (e) {}
+  }
+
+  basculerTheme = () => {
+    const actuel = this.state.theme || (this.props.themeInitial === 'clair' ? 'clair' : 'sombre');
+    const suivant = actuel === 'clair' ? 'sombre' : 'clair';
+    try { localStorage.setItem(CLE_THEME, suivant); } catch (e) {}
+    this.setState({ theme: suivant });
+  };
+
+  // Mode démonstration : attente → lecture (voix qui montent) → décision, en boucle sur SCENARIO_DEMO.
+  demarrerDemo() {
+    if (this.demo) return;
+    const now = Date.now();
+    const passages = historiqueDemo(now);
+    const p = passages[0];
+    this.demo = {
+      index: 0, phase: 'attente', debutPhase: now, idPiste: 41, piste: null,
+      decision: { heure: p.heure, numero: p.numero, decision: p.decision, autorise: p.autorise, delai_s: p.delai_s },
+      barriere: { etat: 'fermee', depuis: now - 63000 },
+      passages, mesures: mesuresDemo(), majMesures: now,
+    };
+    this.afficherJournal(passages);
+    this.minuterieDemo = setInterval(this.tickDemo, 200);
+    this.tickDemo();
+  }
+
+  arreterDemo() {
+    clearInterval(this.minuterieDemo);
+    this.demo = null;
+    this.afficherJournal([]);
+  }
+
+  tickDemo = () => {
+    const d = this.demo;
+    if (!d) return;
+    const now = Date.now();
+    const v = this.vitesse();
+    const ecoule = ((now - d.debutPhase) / 1000) * v;
+    const sc = SCENARIO_DEMO[d.index % SCENARIO_DEMO.length];
+    if (d.phase === 'attente') {
+      if (ecoule >= 2.5) { d.phase = 'lecture'; d.debutPhase = now; d.idPiste += 1; }
+    } else if (d.phase === 'lecture') {
+      const n = Math.floor(ecoule / 0.35);
+      if (sc.decision === 'non lu') {
+        const voix = [1, 1, 2, 2, 1, 2, 2, 2, 2, 2][Math.min(9, n)];
+        d.piste = { id: d.idPiste, meneur: sc.candidats[Math.floor(ecoule / 0.7) % sc.candidats.length], confiance: 0.46 + 0.07 * Math.sin(ecoule * 4), voix, voix_requises: 5, statut: 'en_cours', age_s: arrondi(ecoule) };
+        if (ecoule >= 3.4) this.demoDecider(d, sc, voix, now, ecoule);
+      } else {
+        const voix = Math.min(5, n + 1);
+        d.piste = { id: d.idPiste, meneur: sc.numero, confiance: Math.min(0.98, 0.72 + 0.05 * voix), voix, voix_requises: 5, statut: 'en_cours', age_s: arrondi(ecoule) };
+        if (voix >= 5 && ecoule >= 1.6) this.demoDecider(d, sc, voix, now, ecoule);
+      }
+    } else if (d.phase === 'apres') {
+      if ((now - d.debutPhase) / 1000 >= this.dureeDecision() + 2.5 / v) {
+        d.index += 1; d.phase = 'lecture'; d.debutPhase = now; d.idPiste += 1;
+      }
+    }
+    if (d.barriere.etat === 'ouverte' && (now - d.barriere.depuis) / 1000 >= this.dureeDecision()) d.barriere = { etat: 'fermee', depuis: now };
+    if (now - d.majMesures >= 1000) { d.mesures = mesuresDemo(); d.majMesures = now; }
+    this.appliquerEtat({
+      heure: hhmmss(new Date(now)),
+      images_par_seconde: d.mesures.ips,
+      materiel: 'PC',
+      latences_ms: d.mesures.latences,
+      barriere: { etat: d.barriere.etat, depuis_s: arrondi((now - d.barriere.depuis) / 1000) },
+      pistes: d.piste ? [d.piste] : [],
+      derniere_decision: d.decision,
+    }, 'demo');
+  };
+
+  demoDecider(d, sc, voix, now, ecoule) {
+    const heure = hhmmss(new Date(now));
+    const delai = arrondi(ecoule);
+    d.decision = { heure, numero: sc.numero, decision: sc.decision, autorise: sc.autorise, delai_s: delai };
+    d.passages = [{ heure, numero: sc.numero, decision: sc.decision, autorise: sc.autorise, voix, delai_s: delai, capture: '' }].concat(d.passages).slice(0, 50);
+    this.afficherJournal(d.passages);
+    if (sc.decision === 'ouverture') d.barriere = { etat: 'ouverte', depuis: now };
+    d.piste = null;
+    d.phase = 'apres';
+    d.debutPhase = now;
+  }
+
+  renderVals() {
+    const s = this.state;
+    const cfg = this.cfg || CONFIG;
+    const etat = s.etat || {};
+    const live = s.source === 'systeme';
+    const themeNom = s.theme || (this.props.themeInitial === 'clair' ? 'clair' : 'sombre');
+    const fenetre = this.dureeDecision();
+
+    const onglet = (cle) => {
+      const actif = s.onglet === cle;
+      return { actif, couleur: actif ? 'var(--texte)' : 'var(--texte-2)', trait: actif ? 'var(--texte)' : 'transparent', choisir: () => this.choisirOnglet(cle) };
+    };
+
+    const piste = Array.isArray(etat.pistes) && etat.pistes.length ? etat.pistes[0] : null;
+    const enCours = !!piste && piste.statut === 'en_cours';
+    const voix = piste && estNombre(piste.voix) ? piste.voix : null;
+    const requises = piste && estNombre(piste.voix_requises) ? piste.voix_requises : null;
+    const couleurLecture = enCours ? 'var(--bleu)' : 'var(--texte-3)';
+    const conf = piste && estNombre(piste.confiance) ? (piste.confiance > 1 ? piste.confiance : piste.confiance * 100) : null;
+    const nPips = Math.max(1, Math.min(15, requises || 5));
+
+    const b = etat.barriere && typeof etat.barriere === 'object' ? etat.barriere : null;
+    const bCle = b ? sansAccents(b.etat) : '';
+    const ouverte = bCle === 'ouverte';
+
+    const d = etat.derniere_decision && typeof etat.derniere_decision === 'object' ? etat.derniere_decision : null;
+    const infoD = d ? DECISIONS[cleDecision(d.decision)] : null;
+    let age = d ? ecartHeures(etat.heure, d.heure) : NaN;
+    if (d && !estNombre(age)) age = (Date.now() - (this.vueDecision || Date.now())) / 1000;
+    // Branchement (phase 5) : « Autorisé, barrière ouverte » n'est affiché que tant que la barrière est réellement
+    // ouverte d'après /etat. Si elle se referme avant la fin de la fenêtre, la décision passe au résumé.
+    const affichable = !!infoD && (cleDecision(d.decision) !== 'ouverture' || ouverte);
+    const recente = affichable && age >= -2 && age <= fenetre;
+    const mode = recente ? cleDecision(d.decision) : enCours ? 'lecture' : 'attente';
+    const info = recente ? infoD : mode === 'lecture' ? { libelle: 'Lecture en cours', couleur: 'var(--bleu)' } : { libelle: 'En attente', couleur: null };
+    const colore = !!info.couleur;
+    const delaiD = d && estNombre(d.delai_s) ? 'décidé en ' + duree(d.delai_s) : '';
+
+    const passages = s.passages || [];
+    const compte = (k) => passages.filter((p) => cleDecision(p.decision) === k).length;
+    const filtre = (cle) => {
+      const actif = s.filtre === cle;
+      return {
+        actif,
+        fond: actif ? 'var(--surface-2)' : 'var(--surface)',
+        bord: actif ? 'var(--texte)' : 'var(--bord)',
+        choisir: () => this.setState((st) => ({ filtre: st.filtre === cle ? 'tous' : cle })),
+      };
+    };
+    const visibles = s.filtre === 'tous' ? passages : passages.filter((p) => cleDecision(p.decision) === s.filtre);
+    const lignes = visibles.map((p) => {
+      const k = cleDecision(p.decision);
+      const inf = DECISIONS[k];
+      const url = typeof p.capture === 'string' && p.capture ? p.capture : null;
+      const ko = !url || !!s.capturesKo[url];
+      return {
+        cle: k ? k.replace(/ /g, '-') : 'inconnue',
+        heure: p.heure ? String(p.heure) : '—',
+        plaque: decouperPlaque(p.numero),
+        libelle: inf ? inf.court : humaniser(p.decision),
+        fond: inf ? inf.couleur : 'var(--surface-3)',
+        encre: inf ? 'var(--encre)' : 'var(--texte)',
+        autorise: p.autorise === true ? 'Oui' : p.autorise === false ? 'Non' : '—',
+        voix: estNombre(p.voix) ? String(p.voix) : '—',
+        delai: estNombre(p.delai_s) ? duree(p.delai_s) : '—',
+        capture: ko ? null : url,
+        affImage: ko ? 'none' : 'block',
+      };
+    });
+
+    const lat = etat.latences_ms && typeof etat.latences_ms === 'object' ? etat.latences_ms : {};
+    const cles = Object.keys(lat).filter((k) => estNombre(lat[k]) && k.toLowerCase() !== 'total');
+    const somme = cles.reduce((a, k) => a + lat[k], 0);
+    const total = estNombre(lat.total) ? lat.total : somme;
+
+    let message = 'Connexion au système…';
+    let detail = '';
+    if (s.source === 'demo') { message = 'Flux vidéo indisponible'; detail = 'Mode démonstration : les données affichées sont simulées.'; }
+    else if (live && s.videoEtat === 'erreur') { message = 'Flux vidéo indisponible'; detail = 'Le flux ' + cfg.urlVideo + ' ne répond pas.'; }
+    else if (live) { message = 'Connexion au flux vidéo…'; }
+    const videoVisible = live && s.videoEtat === 'ok';
+
+    return {
+      themeNom,
+      refApp: this.refApp,
+      titreAff: !s.largeur || s.largeur >= 1000 ? 'block' : 'none',
+      th: themeNom === 'clair' ? THEME_CLAIR : THEME_SOMBRE,
+      libelleTheme: themeNom === 'clair' ? 'Thème sombre' : 'Thème clair',
+      ariaTheme: themeNom === 'clair' ? 'Passer en thème sombre' : 'Passer en thème clair',
+      basculerTheme: this.basculerTheme,
+      onglets: { supervision: onglet('supervision'), historique: onglet('historique'), technique: onglet('technique') },
+      vues: {
+        supervision: s.onglet === 'supervision' ? 'grid' : 'none',
+        historique: s.onglet === 'historique' ? 'flex' : 'none',
+        technique: s.onglet === 'technique' ? 'flex' : 'none',
+      },
+      source: Object.assign({ cle: s.source }, SOURCES[s.source] || SOURCES.connexion),
+      bandeau: {
+        ips: un(etat.images_par_seconde),
+        materiel: etat.materiel ? String(etat.materiel) : '—',
+        heure: etat.heure ? String(etat.heure) : '—',
+      },
+      refVideo: this.refVideo,
+      video: {
+        src: s.videoSrc,
+        opacite: videoVisible ? 1 : 0,
+        affRemplacement: videoVisible ? 'none' : 'flex',
+        message,
+        detail,
+      },
+      lecture: {
+        statutCle: piste ? String(piste.statut || '') : 'attente',
+        statutLibelle: enCours ? 'Lecture en cours' : piste ? humaniser(piste.statut) : 'En attente',
+        chipFond: enCours ? 'var(--bleu)' : 'var(--surface-2)',
+        chipBord: enCours ? 'var(--bleu)' : 'var(--bord)',
+        chipEncre: enCours ? 'var(--encre)' : 'var(--texte-2)',
+        plaque: decouperPlaque(piste ? piste.meneur : ''),
+        confiance: conf == null ? '—' : Math.round(conf) + NBSP + '%',
+        confianceLargeur: conf == null ? '0%' : Math.max(0, Math.min(100, conf)) + '%',
+        couleur: couleurLecture,
+        vote: voix != null && requises != null ? voix + ' / ' + requises + ' voix' : '—',
+        pips: Array.from({ length: nPips }, (_, i) => ({ fond: voix != null && i < voix ? couleurLecture : 'var(--surface-3)' })),
+      },
+      hero: {
+        mode: mode.replace(/ /g, '-'),
+        libelle: info.libelle,
+        fond: colore ? info.couleur : 'var(--surface)',
+        bord: colore ? info.couleur : 'var(--bord)',
+        encre: colore ? 'var(--encre)' : 'var(--texte)',
+        titre: colore ? 'var(--encre)' : 'var(--texte-2)',
+        affDetails: recente ? 'flex' : 'none',
+        affResume: !recente && d ? 'block' : 'none',
+        plaque: decouperPlaque(d ? d.numero : ''),
+        heure: d && d.heure ? String(d.heure) : '—',
+        delai: delaiD,
+        resume: d
+          ? ['Dernière décision : ' + (infoD ? infoD.court : humaniser(d.decision)), d.numero ? String(d.numero) : 'plaque non lue', d.heure ? String(d.heure) : '', delaiD].filter(Boolean).join(' · ')
+          : '',
+      },
+      barriere: {
+        cle: !b ? 'inconnue' : ouverte ? 'ouverte' : 'fermee',
+        libelle: !b ? '—' : ouverte ? 'Ouverte' : bCle === 'fermee' ? 'Fermée' : humaniser(b.etat),
+        depuis: b && estNombre(b.depuis_s) ? 'depuis ' + duree(b.depuis_s) : '',
+        angle: ouverte ? -80 : 0,
+        voyant: !b ? 'var(--texte-3)' : ouverte ? 'var(--vert)' : 'var(--rouge)',
+      },
+      compteurs: { passages: passages.length, ouvertures: compte('ouverture'), refus: compte('refus'), nonLus: compte('non lu') },
+      filtres: { tous: filtre('tous'), ouverture: filtre('ouverture'), refus: filtre('refus'), nonLu: filtre('non lu') },
+      journal: {
+        lignes,
+        affVide: lignes.length ? 'none' : 'block',
+        messageVide: passages.length ? 'Aucun passage pour ce filtre.' : 'Aucun passage enregistré.',
+      },
+      tech: {
+        etapes: ETAPES.map(([nom, titre], i) => {
+          const ok = s.etapesOk[nom];
+          return {
+            id: 'etape-' + nom,
+            nom,
+            idCarte: 'carte-etape-' + nom,
+            numero: String(i + 1),
+            titre,
+            src: live ? cfg.urlEtape + nom + '?t=' + s.tEtapes : null,
+            rendu: nom === 'vignettes' || nom === 'binaire' ? 'pixelated' : 'auto',
+            affImage: live && ok !== false ? 'block' : 'none',
+            affRemplacement: live && ok === true ? 'none' : 'flex',
+            detail: live ? cfg.urlEtape + nom : s.source === 'demo' ? 'Mode démonstration' : '',
+          };
+        }),
+        latences: cles.map((k) => ({
+          id: 'latence-' + k,
+          idValeur: 'latence-' + k + '-valeur',
+          libelle: LIBELLES_LATENCE[k] || humaniser(k),
+          valeur: un(lat[k]) + NBSP + 'ms',
+          largeur: total > 0 ? Math.min(100, (lat[k] / total) * 100).toFixed(2) + '%' : '0%',
+        })),
+        total: cles.length ? un(total) + NBSP + 'ms' : '—',
+      },
+    };
+  }
+}
+</script>
+</body>
+</html>

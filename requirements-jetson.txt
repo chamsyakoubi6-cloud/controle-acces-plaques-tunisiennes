@@ -1,0 +1,38 @@
+# ============================================================
+# Dépendances Jetson Nano 2 Go — JetPack 4.6.x
+# (Ubuntu 18.04, Python 3.6, CUDA 10.2, TensorRT 8.2)
+# ============================================================
+# Fourni par JetPack, NE PAS installer avec pip :
+#   - OpenCV 4.1.1 (module cv2, compilé avec GStreamer et V4L2)
+#   - TensorRT 8.2 (module tensorrt) et /usr/src/tensorrt/bin/trtexec
+#   - CUDA 10.2 (/usr/local/cuda)
+#
+# INTERDIT sur la Jetson (2 Go de RAM partagés entre CPU et GPU) :
+#   tensorflow, torch, ultralytics, onnxruntime, et surtout opencv-python
+#   (il masquerait l'OpenCV de JetPack, qui est adapté à la carte).
+#
+# Préparation :
+#   sudo apt install python3-pip python3-dev
+#   python3 -m pip install --user --upgrade "pip<22"
+#       (pip 21.3.1 = dernière version compatible Python 3.6 ; le pip d'origine
+#        est trop ancien pour les paquets binaires aarch64 récents)
+#   export PATH=/usr/local/cuda/bin:$PATH
+#       (nvcc doit être trouvé pour compiler pycuda)
+# Installation :
+#   python3 -m pip install --user -r requirements-jetson.txt
+# Avec un venv : python3 -m venv --system-site-packages venv
+#   (sans cette option, cv2 et tensorrt de JetPack sont invisibles)
+# ============================================================
+
+# La 1.19.5 plante sur la Nano ("Illegal instruction") : rester en 1.19.4.
+numpy==1.19.4
+# Accès à CUDA depuis Python (tampons mémoire pour TensorRT). Version figée en phase 6.
+pycuda
+# Interface web locale (phase 5) : la même famille Flask que sur le PC, dernières versions pour Python 3.6.
+# Sous Python 3.6, pip y ajoute des rétroportages : dataclasses, importlib-metadata, zipp.
+flask==2.0.3
+werkzeug==2.0.3
+jinja2==3.0.3
+itsdangerous==2.0.1
+click==8.0.4
+markupsafe==2.0.1

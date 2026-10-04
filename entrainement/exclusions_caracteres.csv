@@ -1,0 +1,8 @@
+image,raison
+val/355.jpg,"coïncidence de segmentation : les vrais chiffres de la série (soudés au cadre) sont écartés et trois fragments du mot arabe forment un groupe de 3"
+train/184.jpg,"coïncidence de segmentation : un fragment du mot arabe compté dans le numéro, étiquettes décalées"
+train/257.jpg,"coïncidence de segmentation : le numéro soudé en un seul blob, deux fragments arabes étiquetés comme chiffres"
+train/284.jpg,"coïncidence de segmentation : le dernier chiffre du numéro non compté (étiqueté « autre »), un autre blob à sa place"
+train/336.jpg,"coïncidence de segmentation : étiquettes incohérentes dans le numéro, dernier chiffre étiqueté « autre »"
+train/367.jpg,"coïncidence de segmentation : un fragment arabe compté, étiquettes décalées d'un cran, dernier chiffre non compté"
+train/661.jpg,"coïncidence de segmentation : un fragment arabe compté, étiquettes décalées d'un cran"

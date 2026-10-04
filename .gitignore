@@ -1,0 +1,75 @@
+# ============================================================
+# .gitignore — projet plaques
+# Règle : rien de volumineux ni de personnel dans git
+# (pas de venv, pas de données, pas de modèles, pas de vraies plaques).
+# Attention : un « # » en fin de ligne ferait partie du motif ;
+# les commentaires sont donc toujours sur leur propre ligne.
+# ============================================================
+
+# --- Environnement Python ---
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+
+# --- Éditeurs et système ---
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# --- Claude Code : réglages personnels ---
+.claude/settings.local.json
+
+# --- Données, validation, modèles : contenu local uniquement ---
+# Seul le README de chaque dossier est versionné.
+donnees/*
+!donnees/README.md
+validation/*
+!validation/README.md
+modeles/*
+!modeles/README.md
+
+# --- Sorties générées : debug, journal des passages, runs, vérifications ---
+sorties/
+runs/
+
+# --- Filet de sécurité : aucune image ni vidéo, où qu'elle soit ---
+# (une photo de vraie plaque rangée au mauvais endroit ne part pas dans git)
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.tif
+*.tiff
+*.webp
+*.mp4
+*.avi
+*.mov
+*.mkv
+# Exception : les schémas du rapport (sans plaques réelles)
+!docs/schemas/**
+
+# --- Poids et modèles, où qu'ils soient ---
+*.pt
+*.pth
+*.onnx
+*.engine
+*.trt
+*.keras
+*.h5
+*.tflite
+
+# --- Archives (ex. téléchargement Kaggle) ---
+*.zip
+*.7z
+*.tar
+*.tar.gz
+
+# --- Contrôle d'accès : données personnelles ---
+config/autorises.csv
+*.log
+# Aperçu de la maquette exportée par Claude Design (image) : inutile au système
+interface/maquette/.thumbnail

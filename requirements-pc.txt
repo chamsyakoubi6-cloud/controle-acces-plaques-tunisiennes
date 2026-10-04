@@ -1,0 +1,56 @@
+# ============================================================
+# Dépendances PC — Windows, Python 3.11.9, venv .venv
+# ============================================================
+# ÉTAPE 1 — PyTorch avec CUDA, installé AVANT ce fichier, depuis l'index pytorch.org :
+#   .venv\Scripts\python.exe -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126
+# PyTorch n'est pas listé ici : sous Windows, PyPI ne fournit que la version CPU,
+# que pip installerait à la place. Après chaque installation, vérifier que
+# torch.__version__ finit toujours par "+cu126".
+#
+# ÉTAPE 2 — ce fichier :
+#   .venv\Scripts\python.exe -m pip install -r requirements-pc.txt
+#
+# Versions exactes réellement installées : requirements-pc.lock.txt
+# ============================================================
+
+# --- Code du système (doit se comporter comme sur la Jetson : NumPy 1.19.4, OpenCV 4.1.1) ---
+# NumPy 1.x comme sur la Jetson : NumPy 2 a changé les règles de promotion
+# des types (ex. uint8 + entier), les calculs sur images pourraient différer.
+numpy>=1.26,<2
+# OpenCV 4.12+ et 5.x exigent NumPy 2 ; la 4.11 reste proche de la 4.1.1 de la Jetson.
+opencv-python>=4.10,<4.12
+# Inférence sur PC (CPU). Sur la Jetson, TensorRT la remplace.
+onnxruntime>=1.20
+
+# --- Détection : entraînement et export de YOLOv8n (phase 2) ---
+ultralytics~=8.4.0
+# Export ONNX : onnx lit et écrit les fichiers, onnxslim les simplifie.
+# Installés ici pour qu'Ultralytics n'ait rien à installer lui-même.
+onnx>=1.16
+onnxslim>=0.1.82
+
+# --- Lecture : CNN TensorFlow/Keras (phase 4) ---
+# TF 2.21 = Keras 3, CPU uniquement sous Windows natif (suffisant pour un petit CNN).
+tensorflow~=2.21.0
+# Conversion TensorFlow -> ONNX (opset 12, pour TensorRT 8.2 sur la Jetson).
+tf2onnx>=1.17
+
+# --- Interface web locale (phase 5) ---
+# Flask sert la page de supervision, sur 127.0.0.1 seulement. Famille épinglée à l'identique sur le PC et
+# la Jetson : Flask 2.0.3 est la dernière version qui accepte Python 3.6. Épingler Flask seul ne suffit pas :
+# pip prendrait Werkzeug 3, incompatible avec Flask 2.0. Sur le PC, Jinja2 3.0.3 et MarkupSafe 2.0.1
+# remplacent les versions tirées par PyTorch, qui demande « jinja2 » sans version minimale.
+flask==2.0.3
+werkzeug==2.0.3
+jinja2==3.0.3
+itsdangerous==2.0.1
+click==8.0.4
+markupsafe==2.0.1
+
+# --- Outils ---
+# Courbes d'apprentissage et figures du rapport.
+matplotlib>=3.7
+# Taille des images et balise EXIF d'orientation, lues sans décoder l'image (inspection du jeu Kaggle).
+pillow>=10
+# Vérifie que systeme/ et outils/ restent compatibles Python 3.6 (Jetson).
+vermin>=1.6
