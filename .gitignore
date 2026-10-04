@@ -20,9 +20,6 @@ Thumbs.db
 desktop.ini
 .DS_Store
 
-# --- Claude Code : réglages personnels ---
-.claude/settings.local.json
-
 # --- Données, validation, modèles : contenu local uniquement ---
 # Seul le README de chaque dossier est versionné.
 donnees/*
@@ -71,5 +68,5 @@ runs/
 # --- Contrôle d'accès : données personnelles ---
 config/autorises.csv
 *.log
-# Aperçu de la maquette exportée par Claude Design (image) : inutile au système
+# Aperçu de la maquette exportée (image) : inutile au système
 interface/maquette/.thumbnail

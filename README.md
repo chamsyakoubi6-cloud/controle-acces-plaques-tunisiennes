@@ -84,7 +84,7 @@ bord, [`docs/journal.md`](docs/journal.md).
 | `systeme/` | code du système, sur PC et Jetson (Python 3.6, NumPy 1.19, OpenCV 4.1.1) |
 | `outils/` | démo, interface web, vérifications, mesure de latence, évaluation (PC et Jetson) |
 | `entrainement/` | préparation des données, entraînements, exports ONNX (PC uniquement, Python 3.11) |
-| `interface/maquette/` | page de supervision (maquette conçue avec Claude Design, React 18 servi en local) |
+| `interface/maquette/` | page de supervision (maquette conçue avec un outil de design, React 18 servi en local) |
 | `config/` | modèle fictif de liste des autorisés |
 | `docs/` | journal de bord, capture de l'interface |
 | `donnees/`, `validation/`, `modeles/` | vides dans le dépôt : chaque README décrit le contenu attendu |

@@ -1246,9 +1246,9 @@ l'administration. Adaptations :
   relire sur la photo de face à 2 m au moment de nommer. En phase 4, la vérité terrain du jeu Kaggle contenait
   elle aussi environ 3 % de fautes de saisie.
 
-## 2026-10-03 — Phase 5 : interface web locale (maquette de Claude Design branchée)
+## 2026-10-03 — Phase 5 : interface web locale (maquette de l'outil de design branchée)
 
-- **Page servie** : `interface/maquette/Supervision parking.dc.html`, exportée de Claude Design. L'export
+- **Page servie** : `interface/maquette/Supervision parking.dc.html`, exportée de l'outil de design. L'export
   d'origine est committé tel quel (351e700), pour que l'écart reste visible dans git.
   - La page interroge elle-même `/etat` (toutes les 300 ms), `/journal?n=50` (toutes les 2 s), `/etape/<nom>`
     (chaque seconde, vue technique) et affiche `/video`.
@@ -1512,7 +1512,7 @@ Ce qui est établi :
   - `systeme/chaine.py`.
 - **Démonstrations** :
   - démo OpenCV, avec les modes des phases 2 à 4 ;
-  - interface web locale (Flask 2.0.3, maquette de Claude Design, 127.0.0.1, ouverture automatique du navigateur
+  - interface web locale (Flask 2.0.3, maquette de l'outil de design, 127.0.0.1, ouverture automatique du navigateur
     sur le PC).
 - **Contrôles** : `python -m outils.verifier_logique`, 71 contrôles ; vermin passe.
 - **Suite** : phase 6, le portage sur la Jetson, avec l'accord de l'étudiant.
