@@ -1,6 +1,6 @@
 """Interface web locale du système (phase 5) : la page de supervision, servie par Flask (PC et Jetson).
 
-La page est la maquette de Claude Design (interface/maquette/Supervision parking.dc.html), branchée sans changer son
+La page est la maquette de l'outil de design (interface/maquette/Supervision parking.dc.html), branchée sans changer son
 apparence : elle interroge elle-même les adresses ci-dessous. Le système (systeme/chaine.py) tourne dans un fil
 d'exécution à part. Après chaque image, il dépose un « instantané » protégé par un verrou : état, image annotée,
 plaque détaillée. Flask ne fait que le lire.
